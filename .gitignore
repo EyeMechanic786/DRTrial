@@ -38,3 +38,7 @@ ml/weights/
 *.pth
 *.onnx
 mlruns/
+
+# Local test artifacts
+test_drtrial.db
+/weights/
