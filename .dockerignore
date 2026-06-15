@@ -1,0 +1,29 @@
+# Never bake patient images or large datasets into images
+data/raw/
+data/processed/
+data/uploads/
+
+# Local dev artifacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+test_drtrial.db
+weights/
+
+# Node build cache (web image has its own context steps)
+node_modules/
+apps/web/node_modules/
+apps/web/dist/
+
+# Git / IDE
+.git/
+.idea/
+.vscode/
+
+# ML weights are mounted at runtime or trained on startup
+ml/weights/
