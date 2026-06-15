@@ -32,7 +32,6 @@ def grade_icdr(lesions: list[LesionMetrics]) -> tuple[int, str, float, list[str]
     ex_c = ex.count if ex else 0
     cws_c = cws.count if cws else 0
     he_pct = he.total_area_pct if he else 0.0
-    cws_c = cws.count if cws else 0
 
     rationale: list[str] = []
     total_lesions = ma_c + he_c + ex_c + cws_c
