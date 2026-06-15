@@ -1,0 +1,81 @@
+# Pull pre-built images from Docker Hub (no local build required)
+# Usage: docker compose -f docker-compose.hub.yml up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: drtrial
+      POSTGRES_PASSWORD: drtrial
+      POSTGRES_DB: drtrial
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drtrial"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    image: eyemechanic786/drtrial-api:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/uploads:/app/data/uploads
+      - ./ml/weights:/app/ml/weights
+    environment:
+      PYTHONPATH: /app
+      DATABASE_URL: postgresql://drtrial:drtrial@postgres:5432/drtrial
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      USE_DL_MODELS: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "python -m apps.api.db.init_db &&
+             uvicorn apps.api.main:app --host 0.0.0.0 --port 8000"
+
+  worker:
+    image: eyemechanic786/drtrial-worker:latest
+    volumes:
+      - ./data/uploads:/app/data/uploads
+      - ./ml/weights:/app/ml/weights
+    environment:
+      PYTHONPATH: /app
+      DATABASE_URL: postgresql://drtrial:drtrial@postgres:5432/drtrial
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      USE_DL_MODELS: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A apps.api.worker.celery_app worker --loglevel=info --concurrency=2
+
+  web:
+    image: eyemechanic786/drtrial-web:latest
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

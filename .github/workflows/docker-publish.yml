@@ -1,0 +1,55 @@
+name: Publish Docker Hub
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+env:
+  DOCKERHUB_USER: eyemechanic786
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/Dockerfile.api
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USER }}/drtrial-api:latest
+            ${{ env.DOCKERHUB_USER }}/drtrial-api:${{ github.sha }}
+
+      - name: Build and push Worker
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/Dockerfile.worker
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USER }}/drtrial-worker:latest
+            ${{ env.DOCKERHUB_USER }}/drtrial-worker:${{ github.sha }}
+
+      - name: Build and push Web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/Dockerfile.web
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USER }}/drtrial-web:latest
+            ${{ env.DOCKERHUB_USER }}/drtrial-web:${{ github.sha }}

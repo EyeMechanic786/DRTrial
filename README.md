@@ -41,6 +41,22 @@ docker compose up --build
 - API: http://localhost:8000
 - Web UI: http://localhost:5173
 
+### Docker Hub (publish / pull)
+
+**Publish** (after `docker login -u eyemechanic786`):
+```powershell
+.\scripts\push-dockerhub.ps1
+```
+
+**Pull and run** pre-built images:
+```bash
+docker compose -f docker-compose.hub.yml up -d
+```
+
+Images: `eyemechanic786/drtrial-api`, `eyemechanic786/drtrial-web`, `eyemechanic786/drtrial-worker`
+
+GitHub Actions workflow `Publish Docker Hub` builds and pushes when you add repo secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
+
 ### Local development
 
 ```bash
