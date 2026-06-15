@@ -15,6 +15,22 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
+      - run: python -m ml.training.train_icdr
+        env:
+          PYTHONPATH: .
       - run: pytest -q
         env:
           PYTHONPATH: .
+          DATABASE_URL: sqlite:///./test_drtrial.db
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+        working-directory: apps/web
+      - run: npm run build
+        working-directory: apps/web

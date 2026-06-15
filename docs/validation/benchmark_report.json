@@ -1,0 +1,22 @@
+{
+  "manifest": "synthetic/bootstrap",
+  "note": "Run ml.evaluation.benchmark with real IDRiD/DDR manifest for full metrics",
+  "segmentation": {
+    "microaneurysms": { "mean_dice": null, "n": 0 },
+    "hemorrhages": { "mean_dice": null, "n": 0 },
+    "hard_exudates": { "mean_dice": null, "n": 0 },
+    "soft_exudates": { "mean_dice": null, "n": 0 }
+  },
+  "grading": {
+    "kappa": null,
+    "n": 0,
+    "latency_mean_ms": null,
+    "latency_p95_ms": null
+  },
+  "targets": {
+    "ma_dice": 0.30,
+    "he_ex_dice": 0.50,
+    "icdr_kappa": 0.80,
+    "p95_latency_ms": 30000
+  }
+}

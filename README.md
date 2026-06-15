@@ -1,97 +1,96 @@
 # DRTrial
 
-**DRTrial** is a clinical decision support web application for automated diabetic retinopathy (DR) lesion detection from colour fundus photographs, with severity classification aligned to **ICO Guidelines for Diabetic Eye Care** and **AAO Diabetic Retinopathy Preferred Practice Pattern**.
+**DRTrial** is a clinical decision support platform for automated diabetic retinopathy (DR) lesion detection from colour fundus photographs, with **ICO** and **AAO**-aligned severity classification and referral guidance.
 
-> **Disclaimer:** Investigational CDS tool. Not for autonomous diagnosis. Final clinical decisions must be made by a licensed ophthalmologist.
+> **Disclaimer:** Investigational CDS — not for autonomous diagnosis.
+
+**Repository:** https://github.com/EyeMechanic786/DRTrial
+
+## Architecture
+
+```
+Browser (React) → FastAPI → Celery Worker → ML Pipeline → PostgreSQL + Redis
+```
+
+| Component | Technology |
+|-----------|------------|
+| Frontend | React + TypeScript + Vite |
+| API | FastAPI + SQLAlchemy |
+| Jobs | Celery + Redis |
+| Database | PostgreSQL |
+| ML | OpenCV CV + optional fundus-lesions-toolkit + sklearn ICDR classifier |
 
 ## Features
 
-- Upload colour fundus images (JPEG/PNG)
-- Multi-lesion detection: microaneurysms, hemorrhages, hard exudates, cotton wool spots
-- **ICDR** severity grading (ICO international classification, 0–4)
-- **DME** suspect grading from hard exudate macula proximity
-- **ICO** referral and follow-up recommendations (high / low-intermediate resource settings)
-- **AAO** re-examination intervals and clinical pearls
-- Explainable overlays with lesion bounding boxes
+- Multi-lesion detection (MA, hemorrhages, hard exudates, cotton wool spots)
+- ICDR grading (ICO international scale, grades 0–4)
+- DME suspect flag from macula proximity heuristic
+- ICO referral/follow-up and AAO PPP intervals
+- Explainable overlays with layer toggles and false-positive dismiss
+- Clinician grade override and PDF report export
+- Async study workflow with audit trail
 
 ## Quick start
 
-### Local development
-
-```bash
-cd DRTrial
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-pip install -r requirements.txt
-uvicorn apps.api.main:app --reload --port 8000
-```
-
-Open http://localhost:8000
-
-### Docker
+### Docker (full stack)
 
 ```bash
 docker compose up --build
 ```
 
-### Run tests
+- API: http://localhost:8000
+- Web UI: http://localhost:5173
+
+### Local development
 
 ```bash
+# Terminal 1 — API
 pip install -r requirements.txt
-pytest
+set PYTHONPATH=.
+python -m apps.api.db.init_db
+uvicorn apps.api.main:app --reload --port 8000
+
+# Terminal 2 — Celery worker
+celery -A apps.api.worker.celery_app worker --loglevel=info
+
+# Terminal 3 — React frontend
+cd apps/web && npm install && npm run dev
 ```
 
-## Architecture
-
+Train ICDR classifier (bootstrap):
+```bash
+python -m ml.training.train_icdr
 ```
-Upload → QC → Lesion detection → ICDR grade → DME grade → ICO + AAO recommendations
+
+## API endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/studies` | Create study |
+| POST | `/studies/{id}/images` | Upload fundus image |
+| POST | `/studies/{id}/analyze` | Queue async analysis |
+| GET | `/jobs/{id}` | Poll job status |
+| GET | `/studies/{id}/results` | Get analysis JSON |
+| PATCH | `/studies/{id}/review` | Clinician override + sign-off |
+| GET | `/studies/{id}/audit` | Audit log |
+| GET | `/studies/{id}/report` | Export JSON report |
+| POST | `/analyze` | Sync analyze (dev/testing) |
+
+## Data pipelines
+
+```bash
+python -m data.pipelines.idrid --raw-dir /path/to/idrid --output-dir data/processed/idrid
+python -m data.pipelines.ddr --raw-dir /path/to/ddr --output-dir data/processed/ddr
+python -m ml.training.train_icdr --manifest data/processed/ddr/manifest.json
+python -m ml.evaluation.benchmark --manifest data/processed/idrid/manifest.json
 ```
 
-| Module | Path | Role |
-|--------|------|------|
-| Pipeline | `ml/dr_pathway/pipeline.py` | End-to-end analysis |
-| Lesion detection | `ml/dr_pathway/lesion_detection.py` | CV-based lesion segmentation |
-| Grading | `ml/dr_pathway/grading.py` | ICDR + ICO + AAO logic |
-| DME | `ml/dr_pathway/dme.py` | Macular edema heuristic |
-| API | `apps/api/main.py` | FastAPI REST + static UI |
-| Web UI | `apps/web/` | Upload and results viewer |
+## Documentation
 
-## API
-
-`POST /analyze` — multipart form with `file` (fundus image)
-
-Query param: `resource_setting=high|low_intermediate`
-
-Returns JSON with `icdr_grade`, `ico`, `aao`, `lesions`, `overlays`, `grading_rationale`.
-
-## Classification standards
-
-Both ICO and AAO adopt the **International Clinical Diabetic Retinopathy (ICDR)** five-level scale:
-
-| Grade | Label |
-|-------|-------|
-| 0 | No apparent DR |
-| 1 | Mild nonproliferative DR |
-| 2 | Moderate nonproliferative DR |
-| 3 | Severe nonproliferative DR |
-| 4 | Proliferative DR |
-
-See [docs/classifications.md](docs/classifications.md) for referral tables.
-
-## Roadmap
-
-- [ ] Deep learning integration (`fundus-lesions-toolkit`, DDR/IDRiD fine-tuning)
-- [ ] Vessel segmentation for IRMA / venous beading
-- [ ] DICOM / PACS integration
-- [ ] Clinician review and sign-off workflow
-- [ ] Regulatory pathway (FDA 21 CFR 886.1100)
+- [Classification standards](docs/classifications.md)
+- [Model card](docs/validation/model_card.md)
+- [Pilot guide](docs/clinical/pilot_guide.md)
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
-
-## References
-
-- ICO Guidelines for Diabetic Eye Care (2017/2018)
-- AAO Diabetic Retinopathy Preferred Practice Pattern
-- Porwal P. et al., IDRiD dataset, IEEE Dataport 2018
+MIT

@@ -1,81 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DRTrial — DR Lesion Detection</title>
-  <link rel="stylesheet" href="/static/style.css" />
-</head>
-<body>
-  <header>
-    <h1>DRTrial</h1>
-    <p class="tagline">Diabetic Retinopathy Lesion Detection &amp; ICO / AAO Grading</p>
-    <p class="disclaimer">Clinical decision support only — not for autonomous diagnosis.</p>
-  </header>
-
-  <main>
-    <section class="upload-panel">
-      <h2>Upload colour fundus photograph</h2>
-      <form id="upload-form">
-        <input type="file" id="fundus-file" accept="image/jpeg,image/png" required />
-        <label>
-          Resource setting
-          <select id="resource-setting">
-            <option value="high">High resource (ICO Table 2a)</option>
-            <option value="low_intermediate">Low / intermediate (ICO Table 2b)</option>
-          </select>
-        </label>
-        <button type="submit" id="analyze-btn">Analyze</button>
-      </form>
-      <p id="status" class="status" aria-live="polite"></p>
-    </section>
-
-    <section id="results" class="results hidden">
-      <div class="viewer-row">
-        <div class="viewer">
-          <h3>Fundus with lesion overlay</h3>
-          <canvas id="overlay-canvas"></canvas>
-        </div>
-        <div class="grades">
-          <h3>ICDR / ICO severity</h3>
-          <div class="grade-card primary">
-            <span class="grade-value" id="icdr-grade">—</span>
-            <span class="grade-label" id="icdr-label">—</span>
-            <span class="confidence" id="icdr-confidence"></span>
-          </div>
-          <h3>DME</h3>
-          <p id="dme-label" class="dme-label">—</p>
-          <h3>ICO recommendation</h3>
-          <ul id="ico-details" class="detail-list"></ul>
-          <h3>AAO recommendation</h3>
-          <ul id="aao-details" class="detail-list"></ul>
-        </div>
-      </div>
-
-      <h3>Lesion quantification</h3>
-      <table id="lesion-table">
-        <thead>
-          <tr>
-            <th>Lesion</th>
-            <th>Count</th>
-            <th>Area %</th>
-            <th>Macula proximity</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-
-      <h3>Grading rationale</h3>
-      <ul id="rationale" class="detail-list"></ul>
-
-      <h3>Image quality</h3>
-      <ul id="qc-details" class="detail-list"></ul>
-    </section>
-  </main>
-
-  <footer>
-    <p>DRTrial v1.0 — ICO Guidelines for Diabetic Eye Care &amp; AAO DR Preferred Practice Pattern aligned.</p>
-  </footer>
-  <script src="/static/app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DRTrial — DR Lesion CDS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
