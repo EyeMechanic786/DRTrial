@@ -24,6 +24,15 @@ export interface AAORecommendation {
   clinical_pearls: string[];
 }
 
+export interface NonDRPathologyFinding {
+  pathology_type: string;
+  label: string;
+  detected: boolean;
+  confidence: number;
+  central_area_pct: number;
+  notes: string[];
+}
+
 export interface AnalysisResult {
   study_id: string;
   model_version: string;
@@ -53,6 +62,7 @@ export interface AnalysisResult {
   aao: AAORecommendation;
   overlays: OverlayLayer[];
   grading_rationale: string[];
+  non_dr_pathology?: NonDRPathologyFinding | null;
   disclaimer: string;
 }
 

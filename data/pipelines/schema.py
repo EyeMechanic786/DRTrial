@@ -11,6 +11,10 @@ class DatasetSource(str):
     IDRID = "idrid"
     DDR = "ddr"
     EYEPACS = "eyepacs"
+    UWF4DR = "uwf4dr"
+    UWF_IQA = "uwf_iqa"
+    PRIME_FP20 = "prime_fp20"
+    UWF_TUMORS = "uwf_tumors"
 
 
 class Split(str):

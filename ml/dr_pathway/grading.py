@@ -6,6 +6,7 @@ developed via AAO-led international consensus and adopted by ICO guidelines.
 
 from __future__ import annotations
 
+from ml.dr_pathway.macular_atrophy import MacularAtrophyResult
 from ml.dr_pathway.schemas import (
     AAORecommendation,
     ICDR_LABELS,
@@ -75,6 +76,82 @@ def grade_icdr(lesions: list[LesionMetrics]) -> tuple[int, str, float, list[str]
 
     rationale.append("Lesion pattern does not match standard ICDR categories clearly.")
     return ICDRGrade.MODERATE_NPDR, ICDR_LABELS[2], 0.45, rationale
+
+
+def atrophy_likely_explains_dr_findings(
+    atrophy: MacularAtrophyResult,
+    lesions: list[LesionMetrics],
+) -> bool:
+    """True when central findings are probably atrophy mimic, not true DR.
+
+    Macular exudates and edema are still detected — this only revises ICDR when
+    hemorrhages / microaneurysms are absent and central exudate/CWS pattern fits
+    a large homogeneous atrophic zone.
+    """
+    if not atrophy.detected or atrophy.confidence < 0.55:
+        return False
+
+    lm = _lesion_map(lesions)
+    ma = lm.get("microaneurysms")
+    he = lm.get("hemorrhages")
+    ex = lm.get("hard_exudates")
+    cws = lm.get("cotton_wool_spots")
+
+    ma_c = ma.count if ma else 0
+    he_c = he.count if he else 0
+    ex_c = ex.count if ex else 0
+    cws_c = cws.count if cws else 0
+
+    if he_c >= 1 or ma_c >= 1:
+        return False
+
+    central_mimic = 0
+    if ex and ex_c > 0:
+        large_central = (
+            ex.macula_proximity_score >= 0.65
+            and ex.count <= 4
+            and ex.max_component_area_px >= 500
+        )
+        if large_central:
+            central_mimic += 1
+
+    if cws and cws_c > 0:
+        if cws.macula_proximity_score >= 0.65 and cws.count <= 3:
+            central_mimic += 1
+
+    return central_mimic >= 1
+
+
+def apply_atrophy_grading_context(
+    icdr_grade: int,
+    icdr_label: str,
+    confidence: float,
+    grade_rationale: list[str],
+    atrophy: MacularAtrophyResult,
+    lesions: list[LesionMetrics],
+) -> tuple[int, str, float, list[str]]:
+    """Adjust ICDR confidence when macular atrophy likely explains false DR calls."""
+    rationale = list(grade_rationale)
+    if not atrophy.detected:
+        return icdr_grade, icdr_label, confidence, rationale
+
+    rationale = atrophy.rationale + rationale
+
+    if atrophy_likely_explains_dr_findings(atrophy, lesions):
+        rationale.append(
+            "Central exudate/CWS signal likely reflects macular atrophy rather than DR — "
+            "ICDR downgraded to no apparent DR. DME assessment unchanged."
+        )
+        return ICDRGrade.NO_DR, ICDR_LABELS[0], min(confidence, 0.45), rationale
+
+    if icdr_grade > ICDRGrade.NO_DR:
+        rationale.append(
+            "Macular atrophy suspected — interpret central findings with caution; "
+            "true DR and DME may coexist with atrophy."
+        )
+        confidence = max(0.35, confidence - 0.15)
+
+    return icdr_grade, icdr_label, confidence, rationale
 
 
 def ico_recommendation(

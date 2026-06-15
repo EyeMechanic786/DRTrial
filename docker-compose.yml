@@ -33,6 +33,8 @@ services:
       - "8000:8000"
     volumes:
       - ./data/uploads:/app/data/uploads
+      - ./data/raw:/app/data/raw
+      - ./data/processed:/app/data/processed
       - ./ml/weights:/app/ml/weights
     environment:
       PYTHONPATH: /app
@@ -56,6 +58,8 @@ services:
       dockerfile: infra/docker/Dockerfile.worker
     volumes:
       - ./data/uploads:/app/data/uploads
+      - ./data/raw:/app/data/raw
+      - ./data/processed:/app/data/processed
       - ./ml/weights:/app/ml/weights
     environment:
       PYTHONPATH: /app

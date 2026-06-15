@@ -241,7 +241,7 @@ def preprocess_fundus(
         fovea_xy=(fx_scaled, fy_scaled),
         fovea_xy_original=(fx_orig, fy_orig),
         roi_offset=(x0, y0),
-        roi_size=(roi_w, roi_h),
+        roi_size=(roi_h, roi_w),
         scale=scale,
         notes=notes,
     )
@@ -263,16 +263,29 @@ def map_bbox_to_original(
 
 
 def map_mask_to_original(mask: np.ndarray, preprocess: PreprocessResult) -> np.ndarray:
-    """Resize mask and place into original image coordinates."""
+    """Resize mask from analysis coords and place into original image."""
     h_orig, w_orig = preprocess.original_bgr.shape[:2]
-    inv_scale = 1.0 / preprocess.scale if preprocess.scale else 1.0
     roi_h, roi_w = preprocess.roi_size
+    ox, oy = preprocess.roi_offset
+
     restored_roi = cv2.resize(
         mask,
         (roi_w, roi_h),
         interpolation=cv2.INTER_NEAREST,
     )
+
+    end_y = min(oy + roi_h, h_orig)
+    end_x = min(ox + roi_w, w_orig)
+    paste_h = end_y - oy
+    paste_w = end_x - ox
+
+    if restored_roi.shape[0] != paste_h or restored_roi.shape[1] != paste_w:
+        restored_roi = cv2.resize(
+            restored_roi,
+            (paste_w, paste_h),
+            interpolation=cv2.INTER_NEAREST,
+        )
+
     full = np.zeros((h_orig, w_orig), dtype=np.uint8)
-    ox, oy = preprocess.roi_offset
-    full[oy : oy + roi_h, ox : ox + roi_w] = restored_roi
+    full[oy:end_y, ox:end_x] = restored_roi
     return full

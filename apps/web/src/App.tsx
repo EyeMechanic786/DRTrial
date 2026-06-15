@@ -102,6 +102,16 @@ export default function App() {
 
       {result && imageUrl && (
         <section className="panel results">
+          {result.non_dr_pathology?.detected && (
+            <div className="pathology-banner">
+              <strong>{result.non_dr_pathology.label}</strong>
+              <span>
+                Confidence {(result.non_dr_pathology.confidence * 100).toFixed(0)}% —
+                central area {result.non_dr_pathology.central_area_pct.toFixed(1)}%.
+                Macula is still fully analysed for exudates and edema; consider OCT/FAF.
+              </span>
+            </div>
+          )}
           <div className="grid">
             <div>
               <h3>Fundus viewer</h3>

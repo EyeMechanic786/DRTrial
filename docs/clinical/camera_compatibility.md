@@ -64,12 +64,24 @@ POST /studies
 
 ## Limitations
 
-- Models are primarily validated on central-field CFP datasets (IDRiD, DDR). Optos UWF peripheral sensitivity may be lower until UWF-specific fine-tuning (e.g. UWF4DR dataset).
+- Models are primarily validated on central-field CFP datasets (IDRiD, DDR). Optos UWF performance improves with open UWF fine-tuning — see [optos_datasets.md](optos_datasets.md).
+- Macular atrophy and other non-DR pathology can mimic DR on UWF; the macula remains fully analysed for exudates and DME.
 - No camera serial number or DICOM metadata coupling — intentionally vendor-neutral.
 - For production Optos integration, export images as high-quality JPEG from **optomap** review software.
+
+## Open Optos validation datasets
+
+| Dataset | Use |
+|---------|-----|
+| UWF4DR (MICCAI 2024) | DR / DME / quality on Optos UWF |
+| Open UWF IQA (Figshare) | AMD, healthy controls, QC |
+| PRIME-FP20 | Validity masks, ROI calibration |
+
+Ingestion guide: **[optos_datasets.md](optos_datasets.md)**
 
 ## References
 
 - Optos UWF clinical validation literature (peripheral DR lesions)
 - UWF4DR Challenge (MICCAI 2024) — Optos-acquired images
+- Open UWF IQA dataset (Scientific Data 2024, Optos 200Tx)
 - ICO Guidelines — camera-agnostic DR grading standards

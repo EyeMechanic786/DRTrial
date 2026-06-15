@@ -55,6 +55,18 @@ input, select, textarea {
 
 .error { color: var(--danger); }
 
+.pathology-banner {
+  background: rgba(240, 180, 41, 0.12);
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
 

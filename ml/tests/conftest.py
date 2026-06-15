@@ -1,18 +1,17 @@
-"""Pytest fixtures — use SQLite for tests."""
+"""Pytest fixtures — use in-memory SQLite for tests."""
 
 import os
+
 import pytest
 
-os.environ.setdefault("DATABASE_URL", "sqlite:///./test_drtrial.db")
+os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
 
 @pytest.fixture(autouse=True)
 def setup_db():
+    from apps.api.db.database import engine
     from apps.api.db.init_db import init_db
 
     init_db()
     yield
-    try:
-        os.remove("test_drtrial.db")
-    except OSError:
-        pass
+    engine.dispose()

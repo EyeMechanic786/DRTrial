@@ -34,7 +34,7 @@ class ICDRClassifier:
     def __init__(self):
         self.model = None
         if WEIGHTS_PATH.exists():
-            self.model = joblib.load(WIGHTS_PATH)
+            self.model = joblib.load(WEIGHTS_PATH)
 
     @property
     def available(self) -> bool:

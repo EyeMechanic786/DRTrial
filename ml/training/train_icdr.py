@@ -14,6 +14,7 @@ from sklearn.metrics import classification_report, cohen_kappa_score
 from sklearn.model_selection import train_test_split
 
 from ml.dr_pathway.lesion_detection import detect_lesions
+from ml.dr_pathway.preprocessing import preprocess_fundus
 from ml.inference.icdr_classifier import lesion_features
 from ml.inference.model_registry import register_model
 
@@ -34,7 +35,13 @@ def extract_training_data(manifest_path: Path) -> tuple[np.ndarray, np.ndarray]:
         img = cv2.imread(str(img_path))
         if img is None:
             continue
-        detection = detect_lesions(img)
+        meta = rec.get("metadata", {})
+        camera_hint = meta.get("camera_vendor", "auto")
+        if camera_hint == "optos_uwf":
+            preprocess = preprocess_fundus(img, camera_hint="optos_uwf")
+            detection = detect_lesions(preprocess.analysis_bgr, preprocess.fovea_xy)
+        else:
+            detection = detect_lesions(img)
         features = lesion_features(detection.metrics).flatten()
         X.append(features)
         y.append(int(rec["icdr_grade"]))

@@ -44,7 +44,14 @@ def evaluate_segmentation(manifest_path: Path, max_images: int = 50) -> dict:
         img = cv2.imread(rec["image_path"])
         if img is None:
             continue
-        inference = run_inference(img)
+        meta = rec.get("metadata", {})
+        if meta.get("camera_vendor") == "optos_uwf":
+            from ml.dr_pathway.preprocessing import preprocess_fundus
+
+            preprocess = preprocess_fundus(img, camera_hint="optos_uwf")
+            inference = run_inference(img, preprocess)
+        else:
+            inference = run_inference(img)
         for lesion_type, mask_path in masks.items():
             gt = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
             if gt is None:
@@ -68,20 +75,23 @@ def evaluate_segmentation(manifest_path: Path, max_images: int = 50) -> dict:
     return summary
 
 
-def evaluate_grading(manifest_path: Path) -> dict:
+def evaluate_grading(manifest_path: Path, max_images: int | None = None) -> dict:
     records = json.loads(manifest_path.read_text())
     y_true, y_pred = [], []
     latencies = []
 
     for rec in records:
+        if max_images is not None and len(y_true) >= max_images:
+            break
         if rec.get("icdr_grade") is None:
             continue
         img_path = Path(rec["image_path"])
         if not img_path.exists():
             continue
         image_bytes = img_path.read_bytes()
+        camera_hint = rec.get("metadata", {}).get("camera_vendor", "auto")
         t0 = time.perf_counter()
-        result = analyze_fundus_image(image_bytes, rec["image_id"])
+        result = analyze_fundus_image(image_bytes, rec["image_id"], camera_hint=camera_hint)
         latencies.append(time.perf_counter() - t0)
         y_true.append(int(rec["icdr_grade"]))
         y_pred.append(int(result.icdr_grade))
@@ -104,12 +114,13 @@ def main():
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=Path("docs/validation/benchmark_report.json"))
     parser.add_argument("--max-seg", type=int, default=30)
+    parser.add_argument("--max-grading", type=int, default=None)
     args = parser.parse_args()
 
     report = {
         "manifest": str(args.manifest),
         "segmentation": evaluate_segmentation(args.manifest, args.max_seg),
-        "grading": evaluate_grading(args.manifest),
+        "grading": evaluate_grading(args.manifest, args.max_grading),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2))

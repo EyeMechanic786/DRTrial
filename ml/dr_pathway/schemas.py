@@ -69,6 +69,17 @@ class CameraInfo(BaseModel):
     preprocessing_notes: list[str] = Field(default_factory=list)
 
 
+class NonDRPathologyFinding(BaseModel):
+    """Non-diabetic retinopathy pathology that can mimic DR on fundus imaging."""
+
+    pathology_type: str
+    label: str
+    detected: bool = False
+    confidence: float = 0.0
+    central_area_pct: float = 0.0
+    notes: list[str] = Field(default_factory=list)
+
+
 class ICORecommendation(BaseModel):
     """ICO Guidelines for Diabetic Eye Care — referral and follow-up."""
 
@@ -117,6 +128,7 @@ class AnalysisResult(BaseModel):
     aao: AAORecommendation
     overlays: list[OverlayLayer] = Field(default_factory=list)
     grading_rationale: list[str] = Field(default_factory=list)
+    non_dr_pathology: NonDRPathologyFinding | None = None
     disclaimer: str = (
         "AI-assisted clinical decision support only. "
         "Final diagnosis and management by a licensed ophthalmologist."

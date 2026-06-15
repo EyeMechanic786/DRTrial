@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 
 from ml.dr_pathway.preprocessing import CameraVendor, PreprocessResult, VENDOR_LABELS
+from ml.dr_pathway.optos_reference import load_optos_reference
 from ml.dr_pathway.schemas import ImageQC
 
 
@@ -39,7 +40,12 @@ def assess_image_quality(
     passed = True
 
     # Optos and UWF images often have lower Laplacian on downscaled ROI — relaxed threshold
-    focus_min = 35 if vendor == CameraVendor.OPTOS_UWF else 50
+    optos_ref = load_optos_reference()
+    focus_min = (
+        optos_ref.recommended_focus_min
+        if vendor == CameraVendor.OPTOS_UWF and optos_ref.available
+        else 35 if vendor == CameraVendor.OPTOS_UWF else 50
+    )
     if focus_score < focus_min:
         warnings.append("Image may be out of focus (low sharpness).")
         passed = False
@@ -62,6 +68,7 @@ def assess_image_quality(
         warnings.append(
             "Optos UWF: peripheral lesion sensitivity may differ from central CFP training data."
         )
+        warnings.extend(load_optos_reference().qc_notes())
     elif vendor == CameraVendor.UNKNOWN:
         warnings.append("Camera type not recognized; results use generic normalization.")
 

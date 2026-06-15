@@ -97,15 +97,22 @@ python -m ml.training.train_icdr
 ```bash
 python -m data.pipelines.idrid --raw-dir /path/to/idrid --output-dir data/processed/idrid
 python -m data.pipelines.ddr --raw-dir /path/to/ddr --output-dir data/processed/ddr
-python -m ml.training.train_icdr --manifest data/processed/ddr/manifest.json
-python -m ml.evaluation.benchmark --manifest data/processed/idrid/manifest.json
+
+# Open Optos UWF datasets (UWF4DR, UWF IQA, PRIME-FP20) — see docs/clinical/optos_datasets.md
+python -m data.pipelines.uwf4dr --raw-dir data/raw/uwf4dr --output-dir data/processed/uwf4dr
+python -m data.pipelines.uwf_iqa --raw-dir data/raw/uwf_iqa --output-dir data/processed/uwf_iqa
+python -m data.pipelines.merge_manifests data/processed/idrid/manifest.json data/processed/uwf4dr/manifest.json --output data/processed/combined/manifest.json
+python -m data.pipelines.build_optos_reference --manifest data/processed/combined/manifest.json
+
+python -m ml.training.train_icdr --manifest data/processed/combined/manifest.json
+python -m ml.evaluation.benchmark --manifest data/processed/uwf4dr/manifest.json
 ```
 
 ## Camera compatibility (vendor-neutral)
 
 DRTrial works with **any colour fundus camera** — no vendor lock-in. Optos ultra-widefield (UWF) images are explicitly supported via automatic letterbox removal, cSLO colour normalization, and optic-disc-relative macula localization.
 
-See [docs/clinical/camera_compatibility.md](docs/clinical/camera_compatibility.md) for Optos and other camera details.
+See [docs/clinical/camera_compatibility.md](docs/clinical/camera_compatibility.md) and [docs/clinical/optos_datasets.md](docs/clinical/optos_datasets.md) for Optos open dataset cross-reference.
 
 - [Classification standards](docs/classifications.md)
 - [Model card](docs/validation/model_card.md)
