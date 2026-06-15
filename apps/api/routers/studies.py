@@ -27,6 +27,7 @@ def create_study(payload: StudyCreate, db: Session = Depends(get_db)):
         patient_ref=payload.patient_ref,
         eye=payload.eye,
         resource_setting=payload.resource_setting,
+        camera_hint=payload.camera_hint,
     )
     db.add(study)
     db.commit()
@@ -97,7 +98,9 @@ def analyze_study(study_id: str, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(job)
 
-    task = analyze_study_task.delay(study_id, image.storage_path, study.resource_setting)
+    task = analyze_study_task.delay(
+        study_id, image.storage_path, study.resource_setting, study.camera_hint
+    )
     job.celery_task_id = task.id
     study.status = "analyzing"
     db.commit()

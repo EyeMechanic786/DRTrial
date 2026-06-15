@@ -12,6 +12,10 @@ class StudyCreate(BaseModel):
     patient_ref: str | None = None
     eye: str | None = Field(None, pattern="^(OD|OS|OU)?$")
     resource_setting: str = "high"
+    camera_hint: str = Field(
+        default="auto",
+        description="Camera profile: auto, standard_cfp, optos_uwf, confocal_slo",
+    )
 
 
 class StudyResponse(BaseModel):

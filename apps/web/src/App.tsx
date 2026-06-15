@@ -25,6 +25,7 @@ export default function App() {
   const [icdrOverride, setIcdrOverride] = useState<number | "">("");
   const [notes, setNotes] = useState("");
   const [resourceSetting, setResourceSetting] = useState("high");
+  const [cameraHint, setCameraHint] = useState("auto");
 
   const handleFile = (f: File) => {
     setFile(f);
@@ -39,7 +40,7 @@ export default function App() {
     setLoading(true);
     setError("");
     try {
-      const data = await analyzeSync(file, resourceSetting);
+      const data = await analyzeSync(file, resourceSetting, cameraHint);
       setResult(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Analysis failed");
@@ -85,6 +86,12 @@ export default function App() {
           <select value={resourceSetting} onChange={(e) => setResourceSetting(e.target.value)}>
             <option value="high">ICO high resource</option>
             <option value="low_intermediate">ICO low/intermediate</option>
+          </select>
+          <select value={cameraHint} onChange={(e) => setCameraHint(e.target.value)} title="Camera type">
+            <option value="auto">Camera: auto-detect</option>
+            <option value="standard_cfp">Standard fundus (CFP)</option>
+            <option value="optos_uwf">Optos / ultra-widefield</option>
+            <option value="confocal_slo">Confocal SLO</option>
           </select>
           <button onClick={handleAnalyze} disabled={!file || loading}>
             {loading ? "Analyzing…" : "Analyze"}
@@ -140,6 +147,15 @@ export default function App() {
                 <span className="muted">Confidence {(result.icdr_confidence * 100).toFixed(0)}%</span>
               </div>
               <p><strong>DME:</strong> {result.dme_label}</p>
+              {result.camera && (
+                <>
+                  <h4>Camera (vendor-neutral)</h4>
+                  <ul>
+                    <li>{result.camera.vendor_label}</li>
+                    <li>Field of view: {result.camera.field_of_view}</li>
+                  </ul>
+                </>
+              )}
               <h4>ICO</h4>
               <ul>
                 <li>Referral: {result.ico.referral_required ? "Required" : "Not required"}</li>

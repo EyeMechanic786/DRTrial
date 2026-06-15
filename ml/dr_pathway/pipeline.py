@@ -12,16 +12,26 @@ from PIL import Image
 from ml.dr_pathway.dme import grade_dme
 from ml.dr_pathway.grading import aao_recommendation, grade_icdr, ico_recommendation
 from ml.dr_pathway.lesion_detection import LESION_COLORS
+from ml.dr_pathway.preprocessing import CameraVendor, preprocess_fundus
 from ml.dr_pathway.qc import assess_image_quality
-from ml.dr_pathway.schemas import AnalysisResult, OverlayLayer
+from ml.dr_pathway.schemas import AnalysisResult, CameraInfo, OverlayLayer, ICDR_LABELS
 from ml.inference.icdr_classifier import get_icdr_classifier
 from ml.inference.service import run_inference
-from ml.dr_pathway.schemas import ICDR_LABELS
+
+
+def _fov_label(vendor: CameraVendor) -> str:
+    if vendor == CameraVendor.OPTOS_UWF:
+        return "ultra-widefield (~200°)"
+    if vendor == CameraVendor.STANDARD_CFP:
+        return "standard field (~30–50°)"
+    return "variable"
 
 
 def _draw_overlays(image_bgr: np.ndarray, masks: dict[str, np.ndarray]) -> str:
     overlay = image_bgr.copy()
     for lesion_type, mask in masks.items():
+        if mask.shape[:2] != image_bgr.shape[:2]:
+            mask = cv2.resize(mask, (image_bgr.shape[1], image_bgr.shape[0]))
         color = LESION_COLORS.get(lesion_type, [255, 255, 255])
         colored = np.zeros_like(image_bgr)
         colored[mask > 0] = color
@@ -38,15 +48,17 @@ def analyze_fundus_image(
     image_bytes: bytes,
     study_id: str,
     resource_setting: str = "high",
+    camera_hint: str = "auto",
 ) -> AnalysisResult:
-    """Full pathway: QC → lesion detection → ICDR grade → DME → ICO/AAO recommendations."""
+    """Full pathway: preprocess → QC → lesion detection → ICDR grade → DME → ICO/AAO."""
     arr = np.frombuffer(image_bytes, dtype=np.uint8)
     image_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if image_bgr is None:
         raise ValueError("Could not decode image. Upload JPEG or PNG colour fundus photo.")
 
-    qc = assess_image_quality(image_bgr)
-    inference = run_inference(image_bgr)
+    preprocess = preprocess_fundus(image_bgr, camera_hint=camera_hint)
+    qc = assess_image_quality(image_bgr, preprocess)
+    inference = run_inference(image_bgr, preprocess)
 
     icdr_grade, icdr_label, confidence, grade_rationale = grade_icdr(inference.metrics)
     classifier = get_icdr_classifier()
@@ -63,13 +75,14 @@ def analyze_fundus_image(
 
     dme_grade, dme_label, dme_rationale = grade_dme(inference.metrics)
 
-    rationale = grade_rationale + dme_rationale
+    rationale = list(preprocess.notes) + grade_rationale + dme_rationale
     rationale.append(f"Inference backend: {inference.backend}")
     if not qc.passed:
         rationale.extend([f"QC warning: {w}" for w in qc.warnings])
         confidence = max(0.3, confidence - 0.15)
 
-    overlay_b64 = _draw_overlays(image_bgr, inference.masks)
+    display_bgr = preprocess.original_bgr
+    overlay_b64 = _draw_overlays(display_bgr, inference.masks)
     composite = OverlayLayer(
         lesion_type="composite_overlay",
         color_rgb=[255, 255, 255],
@@ -81,10 +94,19 @@ def analyze_fundus_image(
     )
     aao = aao_recommendation(icdr_grade, icdr_label, dme_grade, dme_label)
 
+    camera_info = CameraInfo(
+        vendor=preprocess.vendor.value,
+        vendor_label=preprocess.vendor_label,
+        field_of_view=_fov_label(preprocess.vendor),
+        vendor_neutral=True,
+        preprocessing_notes=preprocess.notes,
+    )
+
     return AnalysisResult(
         study_id=study_id,
         model_version=inference.model_version,
         qc=qc,
+        camera=camera_info,
         lesions=inference.metrics,
         icdr_grade=icdr_grade,
         icdr_label=icdr_label,

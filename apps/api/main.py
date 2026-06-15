@@ -52,6 +52,7 @@ def health() -> dict:
 async def analyze_legacy(
     file: UploadFile = File(...),
     resource_setting: str = "high",
+    camera_hint: str = "auto",
 ) -> AnalysisResult:
     """Legacy synchronous analyze endpoint for quick testing."""
     import uuid
@@ -68,6 +69,6 @@ async def analyze_legacy(
     (UPLOAD_DIR / f"{study_id}{ext}").write_bytes(image_bytes)
 
     try:
-        return analyze_fundus_image(image_bytes, study_id, resource_setting)
+        return analyze_fundus_image(image_bytes, study_id, resource_setting, camera_hint)
     except ValueError as exc:
         raise HTTPException(422, detail=str(exc)) from exc

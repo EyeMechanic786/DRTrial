@@ -49,7 +49,9 @@ Run benchmark:
 python -m ml.evaluation.benchmark --manifest data/processed/idrid/manifest.json
 ```
 
-## Limitations
+## Camera compatibility
+
+Vendor-neutral preprocessing supports standard CFP, **Optos UWF**, and confocal SLO devices. See `docs/clinical/camera_compatibility.md`.
 
 - PDR detection limited without neovascularization model
 - DME is suspect-only; OCT required for confirmation

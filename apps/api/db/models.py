@@ -22,6 +22,7 @@ class Study(Base):
     patient_ref: Mapped[str | None] = mapped_column(String(64), nullable=True)
     eye: Mapped[str | None] = mapped_column(String(8), nullable=True)
     resource_setting: Mapped[str] = mapped_column(String(32), default="high")
+    camera_hint: Mapped[str] = mapped_column(String(32), default="auto")
     status: Mapped[str] = mapped_column(String(32), default="created")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

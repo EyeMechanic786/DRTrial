@@ -24,7 +24,13 @@ celery_app.conf.update(
 
 
 @celery_app.task(bind=True, name="analyze_study")
-def analyze_study_task(self, study_id: str, image_path: str, resource_setting: str = "high"):
+def analyze_study_task(
+    self,
+    study_id: str,
+    image_path: str,
+    resource_setting: str = "high",
+    camera_hint: str = "auto",
+):
     """Run ML pipeline asynchronously and persist results."""
     from apps.api.db.database import SessionLocal
     from apps.api.db.models import AnalysisRecord, JobRecord
@@ -40,7 +46,7 @@ def analyze_study_task(self, study_id: str, image_path: str, resource_setting: s
             db.commit()
 
         image_bytes = Path(image_path).read_bytes()
-        result = analyze_fundus_image(image_bytes, study_id, resource_setting)
+        result = analyze_fundus_image(image_bytes, study_id, resource_setting, camera_hint)
         result_dict = result.model_dump()
 
         record = AnalysisRecord(

@@ -47,15 +47,28 @@ def _green_channel_enhanced(gray: np.ndarray, green: np.ndarray) -> np.ndarray:
     return cv2.equalizeHist(enhanced)
 
 
-def _macula_distance_score(cy: float, cx: float, h: int, w: int) -> float:
-    """Proximity to image center as fovea proxy (0=far, 1=center)."""
-    dy = (cy - h / 2) / (h / 2)
-    dx = (cx - w / 2) / (w / 2)
+def _macula_distance_score(
+    cy: float, cx: float, h: int, w: int, fovea_xy: tuple[float, float] | None = None
+) -> float:
+    """Proximity to estimated fovea (0=far, 1=at fovea)."""
+    if fovea_xy is not None:
+        fx, fy = fovea_xy
+        ref_y, ref_x = fy, fx
+    else:
+        ref_y, ref_x = h / 2, w / 2
+    dy = (cy - ref_y) / (h / 2)
+    dx = (cx - ref_x) / (w / 2)
     dist = min(1.0, float(np.sqrt(dx * dx + dy * dy)))
     return round(1.0 - dist, 3)
 
 
-def _connected_components(mask: np.ndarray, lesion_type: str, h: int, w: int) -> LesionMetrics:
+def _connected_components(
+    mask: np.ndarray,
+    lesion_type: str,
+    h: int,
+    w: int,
+    fovea_xy: tuple[float, float] | None = None,
+) -> LesionMetrics:
     total_px = h * w
     labeled, n = ndimage.label(mask)
     if n == 0:
@@ -75,7 +88,7 @@ def _connected_components(mask: np.ndarray, lesion_type: str, h: int, w: int) ->
         if len(ys) == 0:
             continue
         cy, cx = float(np.mean(ys)), float(np.mean(xs))
-        proximities.append(_macula_distance_score(cy, cx, h, w))
+        proximities.append(_macula_distance_score(cy, cx, h, w, fovea_xy))
 
     total_area = sum(valid)
     macula_score = float(np.mean(proximities)) if proximities else 0.0
@@ -145,7 +158,10 @@ def _detect_cotton_wool_spots(gray: np.ndarray, h: int, w: int) -> np.ndarray:
     return binary.astype(np.uint8)
 
 
-def detect_lesions(image_bgr: np.ndarray) -> DetectionOutput:
+def detect_lesions(
+    image_bgr: np.ndarray,
+    fovea_xy: tuple[float, float] | None = None,
+) -> DetectionOutput:
     h, w = image_bgr.shape[:2]
     gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
     green = image_bgr[:, :, 1]
@@ -158,7 +174,9 @@ def detect_lesions(image_bgr: np.ndarray) -> DetectionOutput:
         "cotton_wool_spots": _detect_cotton_wool_spots(gray, h, w),
     }
 
-    metrics = [_connected_components(m, name, h, w) for name, m in detectors.items()]
+    metrics = [
+        _connected_components(m, name, h, w, fovea_xy) for name, m in detectors.items()
+    ]
     overlays = [_mask_to_overlay(m, name) for name, m in detectors.items()]
 
     return DetectionOutput(metrics=metrics, overlays=overlays, masks=detectors)

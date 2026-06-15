@@ -56,6 +56,17 @@ class ImageQC(BaseModel):
     focus_score: float
     brightness: float
     warnings: list[str] = Field(default_factory=list)
+    camera_vendor: str = "unknown"
+    camera_label: str = "Unknown"
+    field_of_view: str = "unknown"
+
+
+class CameraInfo(BaseModel):
+    vendor: str
+    vendor_label: str
+    field_of_view: str
+    vendor_neutral: bool = True
+    preprocessing_notes: list[str] = Field(default_factory=list)
 
 
 class ICORecommendation(BaseModel):
@@ -95,6 +106,7 @@ class AnalysisResult(BaseModel):
     study_id: str
     model_version: str
     qc: ImageQC
+    camera: CameraInfo | None = None
     lesions: list[LesionMetrics]
     icdr_grade: int
     icdr_label: str

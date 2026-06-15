@@ -85,7 +85,11 @@ python -m ml.training.train_icdr --manifest data/processed/ddr/manifest.json
 python -m ml.evaluation.benchmark --manifest data/processed/idrid/manifest.json
 ```
 
-## Documentation
+## Camera compatibility (vendor-neutral)
+
+DRTrial works with **any colour fundus camera** — no vendor lock-in. Optos ultra-widefield (UWF) images are explicitly supported via automatic letterbox removal, cSLO colour normalization, and optic-disc-relative macula localization.
+
+See [docs/clinical/camera_compatibility.md](docs/clinical/camera_compatibility.md) for Optos and other camera details.
 
 - [Classification standards](docs/classifications.md)
 - [Model card](docs/validation/model_card.md)

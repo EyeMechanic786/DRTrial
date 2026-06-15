@@ -27,7 +27,22 @@ export interface AAORecommendation {
 export interface AnalysisResult {
   study_id: string;
   model_version: string;
-  qc: { passed: boolean; focus_score: number; brightness: number; warnings: string[] };
+  qc: {
+    passed: boolean;
+    focus_score: number;
+    brightness: number;
+    warnings: string[];
+    camera_vendor?: string;
+    camera_label?: string;
+    field_of_view?: string;
+  };
+  camera?: {
+    vendor: string;
+    vendor_label: string;
+    field_of_view: string;
+    vendor_neutral: boolean;
+    preprocessing_notes: string[];
+  };
   lesions: LesionMetrics[];
   icdr_grade: number;
   icdr_label: string;
@@ -113,13 +128,17 @@ export async function submitReview(
   if (!res.ok) throw new Error("Review submit failed");
 }
 
-export async function analyzeSync(file: File, resourceSetting: string): Promise<AnalysisResult> {
+export async function analyzeSync(
+  file: File,
+  resourceSetting: string,
+  cameraHint: string = "auto"
+): Promise<AnalysisResult> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`${API}/analyze?resource_setting=${resourceSetting}`, {
-    method: "POST",
-    body: form,
-  });
+  const res = await fetch(
+    `${API}/analyze?resource_setting=${resourceSetting}&camera_hint=${cameraHint}`,
+    { method: "POST", body: form }
+  );
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || "Analysis failed");
