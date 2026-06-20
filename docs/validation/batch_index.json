@@ -2,16 +2,17 @@
   "strategy": "uwf_iqa_grading_only",
   "batch_size": 10,
   "manifest": "data/processed/uwf_iqa/manifest.json",
-  "completed_batches": [1, 2, 3, 4],
-  "images_graded": 40,
-  "next_batch": 5,
-  "next_offset": 40,
-  "next_output": "docs/validation/optos_benchmark_batch05.json",
+  "completed_batches": [1, 2, 3, 4, 5],
+  "images_graded": 50,
+  "next_batch": 6,
+  "next_offset": 50,
+  "next_output": "docs/validation/optos_benchmark_batch06.json",
   "reports": {
     "1": "docs/validation/optos_benchmark_batch01.json",
     "2": "docs/validation/optos_benchmark_batch02.json",
     "3": "docs/validation/optos_benchmark_batch03.json",
-    "4": "docs/validation/optos_benchmark_batch04.json"
+    "4": "docs/validation/optos_benchmark_batch04.json",
+    "5": "docs/validation/optos_benchmark_batch05.json"
   },
   "notes": [
     "UWF4DR/CodaLab skipped — UWF IQA is the primary validation set.",
