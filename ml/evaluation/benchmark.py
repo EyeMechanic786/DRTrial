@@ -75,19 +75,27 @@ def evaluate_segmentation(manifest_path: Path, max_images: int = 50) -> dict:
     return summary
 
 
-def evaluate_grading(manifest_path: Path, max_images: int | None = None) -> dict:
+def evaluate_grading(
+    manifest_path: Path,
+    max_images: int | None = None,
+    offset: int = 0,
+) -> dict:
     records = json.loads(manifest_path.read_text())
     y_true, y_pred = [], []
     latencies = []
+    skipped = 0
 
     for rec in records:
-        if max_images is not None and len(y_true) >= max_images:
-            break
         if rec.get("icdr_grade") is None:
             continue
         img_path = Path(rec["image_path"])
         if not img_path.exists():
             continue
+        if skipped < offset:
+            skipped += 1
+            continue
+        if max_images is not None and len(y_true) >= max_images:
+            break
         image_bytes = img_path.read_bytes()
         camera_hint = rec.get("metadata", {}).get("camera_vendor", "auto")
         t0 = time.perf_counter()
@@ -97,13 +105,20 @@ def evaluate_grading(manifest_path: Path, max_images: int | None = None) -> dict
         y_pred.append(int(result.icdr_grade))
 
     if not y_true:
-        return {"kappa": None, "n": 0, "latency_p95_ms": None}
+        return {
+            "kappa": None,
+            "n": 0,
+            "offset": offset,
+            "latency_mean_ms": None,
+            "latency_p95_ms": None,
+        }
 
     kappa = cohen_kappa_score(y_true, y_pred, weights="quadratic")
     p95 = float(np.percentile(latencies, 95)) * 1000
     return {
         "kappa": round(kappa, 4),
         "n": len(y_true),
+        "offset": offset,
         "latency_mean_ms": round(float(np.mean(latencies)) * 1000, 1),
         "latency_p95_ms": round(p95, 1),
     }
@@ -171,6 +186,7 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("docs/validation/benchmark_report.json"))
     parser.add_argument("--max-seg", type=int, default=30)
     parser.add_argument("--max-grading", type=int, default=None)
+    parser.add_argument("--grading-offset", type=int, default=0, help="Skip N graded records before batch")
     parser.add_argument("--uwf-cohorts", action="store_true", help="Run UWF IQA cohort analysis")
     parser.add_argument("--max-per-cohort", type=int, default=50)
     args = parser.parse_args()
@@ -178,7 +194,7 @@ def main():
     report = {
         "manifest": str(args.manifest),
         "segmentation": evaluate_segmentation(args.manifest, args.max_seg),
-        "grading": evaluate_grading(args.manifest, args.max_grading),
+        "grading": evaluate_grading(args.manifest, args.max_grading, args.grading_offset),
     }
     if args.uwf_cohorts:
         report["uwf_cohorts"] = evaluate_uwf_cohorts(args.manifest, args.max_per_cohort)

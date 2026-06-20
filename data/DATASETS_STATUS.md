@@ -22,7 +22,21 @@ Last updated: 2026-06-20
 
 JPEG, PNG, TIFF, WebP, BMP — via `ml/dr_pathway/image_io.py`
 
-## Finish setup
+## Batched UWF IQA validation (10 images per run)
+
+Each batch takes ~8–12 minutes on Docker worker:
+
+```powershell
+# Batch 1 (images 1–10)
+docker compose exec worker python -m ml.evaluation.benchmark `
+  --manifest /app/data/processed/uwf_iqa/manifest.json `
+  --output /app/docs/validation/optos_benchmark_batch01.json `
+  --max-seg 0 --max-grading 10 --grading-offset 0
+
+# Batch 2 (images 11–20): use --grading-offset 10, batch02.json, etc.
+```
+
+Reports accumulate under `docs/validation/optos_benchmark_batch*.json`.
 
 ```powershell
 # Ensure Docker Desktop is running, then:
