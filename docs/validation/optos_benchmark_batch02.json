@@ -1,0 +1,28 @@
+{
+  "manifest": "/app/data/processed/uwf_iqa/manifest.json",
+  "segmentation": {
+    "microaneurysms": {
+      "mean_dice": null,
+      "n": 0
+    },
+    "hemorrhages": {
+      "mean_dice": null,
+      "n": 0
+    },
+    "hard_exudates": {
+      "mean_dice": null,
+      "n": 0
+    },
+    "soft_exudates": {
+      "mean_dice": null,
+      "n": 0
+    }
+  },
+  "grading": {
+    "kappa": 0.0,
+    "n": 10,
+    "offset": 10,
+    "latency_mean_ms": 29866.0,
+    "latency_p95_ms": 44181.0
+  }
+}
