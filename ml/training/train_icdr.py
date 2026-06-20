@@ -25,15 +25,31 @@ def load_manifest_records(manifest_path: Path) -> list[dict]:
 
 def extract_training_data(manifest_path: Path, max_samples: int | None = None) -> tuple[np.ndarray, np.ndarray]:
     records = load_manifest_records(manifest_path)
-    X, y = [], []
+    eligible: list[tuple[dict, int]] = []
     for rec in records:
-        if max_samples is not None and len(y) >= max_samples:
-            break
         if rec.get("icdr_grade") is None:
             continue
         img_path = Path(rec["image_path"])
         if not img_path.exists():
             continue
+        eligible.append((rec, int(rec["icdr_grade"])))
+
+    if max_samples is not None and len(eligible) > max_samples:
+        by_grade: dict[int, list[dict]] = {}
+        for rec, grade in eligible:
+            by_grade.setdefault(grade, []).append(rec)
+        grades = sorted(by_grade)
+        per_grade = max(1, max_samples // len(grades))
+        selected: list[dict] = []
+        for grade in grades:
+            selected.extend(by_grade[grade][:per_grade])
+        selected = selected[:max_samples]
+    else:
+        selected = [rec for rec, _ in eligible]
+
+    X, y = [], []
+    for rec in selected:
+        img_path = Path(rec["image_path"])
         img = cv2.imread(str(img_path))
         if img is None:
             continue
@@ -84,8 +100,8 @@ def main():
         X, y = train_synthetic_fallback()
         print(f"Training on {len(y)} synthetic bootstrap samples")
 
-    if len(y) < 10:
-        print("Insufficient data; using synthetic bootstrap.")
+    if len(y) < 10 or len(np.unique(y)) < 2:
+        print("Insufficient class diversity; using synthetic bootstrap.")
         X, y = train_synthetic_fallback()
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
