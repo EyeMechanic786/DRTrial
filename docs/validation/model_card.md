@@ -17,7 +17,7 @@ DRTrial performs multi-lesion detection and ICDR severity grading from colour fu
 ## Intended use
 
 - **Users:** Ophthalmologists, retinal specialists
-- **Input:** Macula-centered colour fundus JPEG/PNG
+- **Input:** Colour fundus JPEG, PNG, TIFF, WebP, or BMP
 - **Output:** Lesion overlays, counts, ICDR grade, DME suspect flag, ICO/AAO referral guidance
 - **Not for:** Autonomous screening without clinician review
 

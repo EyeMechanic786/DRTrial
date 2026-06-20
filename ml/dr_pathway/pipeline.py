@@ -10,6 +10,7 @@ import numpy as np
 from PIL import Image
 
 from ml.dr_pathway.dme import grade_dme
+from ml.dr_pathway.image_io import decode_fundus_image
 from ml.dr_pathway.grading import (
     aao_recommendation,
     apply_atrophy_grading_context,
@@ -65,10 +66,12 @@ def analyze_fundus_image(
     camera_hint: str = "auto",
 ) -> AnalysisResult:
     """Full pathway: preprocess → QC → lesion detection → ICDR grade → DME → ICO/AAO."""
-    arr = np.frombuffer(image_bytes, dtype=np.uint8)
-    image_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    image_bgr = decode_fundus_image(image_bytes)
     if image_bgr is None:
-        raise ValueError("Could not decode image. Upload JPEG or PNG colour fundus photo.")
+        raise ValueError(
+            "Could not decode image. Upload a colour fundus photo "
+            "(JPEG, PNG, TIFF, WebP, or BMP)."
+        )
 
     preprocess = preprocess_fundus(image_bgr, camera_hint=camera_hint)
     qc = assess_image_quality(image_bgr, preprocess)

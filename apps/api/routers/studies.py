@@ -14,6 +14,7 @@ from apps.api.db.models import AnalysisRecord, JobRecord, Study, StudyImage
 from apps.api.schemas import StudyCreate, StudyResponse
 from apps.api.services.audit import log_action
 from apps.api.worker.celery_app import analyze_study_task
+from ml.dr_pathway.image_io import is_allowed_upload
 
 router = APIRouter(prefix="/studies", tags=["studies"])
 
@@ -53,8 +54,11 @@ async def upload_image(
     study = db.query(Study).filter(Study.id == study_id).first()
     if not study:
         raise HTTPException(404, "Study not found")
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(400, "Upload JPEG or PNG colour fundus image.")
+    if not is_allowed_upload(file.filename, file.content_type):
+        raise HTTPException(
+            400,
+            "Upload a colour fundus image (JPEG, PNG, TIFF, WebP, or BMP).",
+        )
 
     image_id = str(uuid.uuid4())
     ext = Path(file.filename or "fundus.jpg").suffix or ".jpg"

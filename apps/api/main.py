@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from apps.api.config import settings
 from apps.api.routers import jobs, studies
+from ml.dr_pathway.image_io import is_allowed_upload
 from ml.dr_pathway.pipeline import analyze_fundus_image
 from ml.dr_pathway.schemas import AnalysisResult
 
@@ -57,8 +58,11 @@ async def analyze_legacy(
     """Legacy synchronous analyze endpoint for quick testing."""
     import uuid
 
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(400, detail="Upload a JPEG or PNG colour fundus image.")
+    if not is_allowed_upload(file.filename, file.content_type):
+        raise HTTPException(
+            400,
+            detail="Upload a colour fundus image (JPEG, PNG, TIFF, WebP, or BMP).",
+        )
 
     study_id = str(uuid.uuid4())
     image_bytes = await file.read()

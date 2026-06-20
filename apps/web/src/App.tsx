@@ -80,7 +80,7 @@ export default function App() {
         <div className="controls">
           <input
             type="file"
-            accept="image/jpeg,image/png"
+            accept="image/jpeg,image/png,image/tiff,image/webp,image/bmp,.tif,.tiff"
             onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
           />
           <select value={resourceSetting} onChange={(e) => setResourceSetting(e.target.value)}>

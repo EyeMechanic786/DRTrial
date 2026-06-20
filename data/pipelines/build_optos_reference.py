@@ -16,12 +16,22 @@ from ml.dr_pathway.preprocessing import preprocess_fundus
 
 def build_reference(manifest_path: Path, output_path: Path, max_images: int = 200) -> dict:
     records = json.loads(manifest_path.read_text())
-    optos_records = [
+    all_optos = [
         r
         for r in records
         if r.get("metadata", {}).get("camera_vendor") == "optos_uwf"
         or r.get("source") in ("uwf4dr", "uwf_iqa", "prime_fp20")
-    ][:max_images]
+    ]
+    by_folder: dict[str, list[dict]] = {}
+    for rec in all_optos:
+        folder = rec.get("metadata", {}).get("diagnosis_folder", "unknown")
+        by_folder.setdefault(folder, []).append(rec)
+
+    per_folder = max(1, max_images // max(len(by_folder), 1))
+    optos_records: list[dict] = []
+    for items in by_folder.values():
+        optos_records.extend(items[:per_folder])
+    optos_records = optos_records[:max_images]
 
     focus_scores: list[float] = []
     brightness_vals: list[float] = []
@@ -39,17 +49,20 @@ def build_reference(manifest_path: Path, output_path: Path, max_images: int = 20
             continue
 
         meta = rec.get("metadata", {})
+        diagnosis_folder = meta.get("diagnosis_folder") or meta.get("diagnosis", "")
+
         datasets_used.add(meta.get("dataset", rec.get("source", "unknown")))
         preprocess = preprocess_fundus(img, camera_hint="optos_uwf")
         gray = cv2.cvtColor(preprocess.analysis_bgr, cv2.COLOR_BGR2GRAY)
         focus_scores.append(float(cv2.Laplacian(gray, cv2.CV_64F).var()))
         brightness_vals.append(float(np.mean(gray) / 255.0))
 
-        diagnosis = meta.get("diagnosis", "")
-        is_non_dr = diagnosis in ("healthy", "age_related_macular_degeneration", "") and rec.get(
-            "icdr_grade", 1
-        ) == 0
-        if is_non_dr or meta.get("non_dr_pathology"):
+        if meta.get("non_dr_pathology") or diagnosis_folder in (
+            "AMD",
+            "Healthy",
+            "healthy",
+            "PM",
+        ):
             non_dr_count += 1
             atrophy = detect_macular_atrophy(preprocess.analysis_bgr, preprocess.fovea_xy)
             if atrophy.detected:

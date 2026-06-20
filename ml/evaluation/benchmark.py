@@ -109,12 +109,70 @@ def evaluate_grading(manifest_path: Path, max_images: int | None = None) -> dict
     }
 
 
+def evaluate_uwf_cohorts(manifest_path: Path, max_per_cohort: int = 50) -> dict:
+    """Benchmark DR grading on UWF IQA diagnosis folders (AMD vs DR vs Healthy)."""
+    records = json.loads(manifest_path.read_text())
+    cohorts: dict[str, list[dict]] = {}
+
+    for rec in records:
+        meta = rec.get("metadata", {})
+        folder = meta.get("diagnosis_folder") or meta.get("diagnosis", "unknown")
+        cohorts.setdefault(folder, []).append(rec)
+
+    summary: dict[str, dict] = {}
+    for folder, items in sorted(cohorts.items()):
+        analyzed = 0
+        false_dr = 0
+        atrophy_detected = 0
+        icdr_grades: list[int] = []
+
+        for rec in items[:max_per_cohort]:
+            img_path = Path(rec["image_path"])
+            if not img_path.exists():
+                continue
+            result = analyze_fundus_image(
+                img_path.read_bytes(),
+                rec["image_id"],
+                camera_hint="optos_uwf",
+            )
+            analyzed += 1
+            icdr_grades.append(result.icdr_grade)
+            if result.icdr_grade > 0:
+                false_dr += 1
+            if result.non_dr_pathology and result.non_dr_pathology.detected:
+                atrophy_detected += 1
+
+        expected_no_dr = folder in ("AMD", "Healthy", "healthy")
+        summary[folder] = {
+            "n_analyzed": analyzed,
+            "mean_icdr_grade": round(float(np.mean(icdr_grades)), 2) if icdr_grades else None,
+            "pct_icdr_gt0": round(100 * false_dr / analyzed, 1) if analyzed else None,
+            "pct_atrophy_flagged": round(100 * atrophy_detected / analyzed, 1) if analyzed else None,
+            "expected_no_dr_cohort": expected_no_dr,
+        }
+
+    non_dr_folders = [f for f, s in summary.items() if s.get("expected_no_dr_cohort")]
+    non_dr_false = [
+        summary[f]["pct_icdr_gt0"]
+        for f in non_dr_folders
+        if summary[f].get("pct_icdr_gt0") is not None
+    ]
+    return {
+        "cohorts": summary,
+        "non_dr_cohorts_mean_false_dr_pct": round(float(np.mean(non_dr_false)), 1)
+        if non_dr_false
+        else None,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=Path("docs/validation/benchmark_report.json"))
     parser.add_argument("--max-seg", type=int, default=30)
     parser.add_argument("--max-grading", type=int, default=None)
+    parser.add_argument("--uwf-cohorts", action="store_true", help="Run UWF IQA cohort analysis")
+    parser.add_argument("--max-per-cohort", type=int, default=50)
     args = parser.parse_args()
 
     report = {
@@ -122,6 +180,8 @@ def main():
         "segmentation": evaluate_segmentation(args.manifest, args.max_seg),
         "grading": evaluate_grading(args.manifest, args.max_grading),
     }
+    if args.uwf_cohorts:
+        report["uwf_cohorts"] = evaluate_uwf_cohorts(args.manifest, args.max_per_cohort)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))

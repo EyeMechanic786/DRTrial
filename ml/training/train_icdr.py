@@ -23,10 +23,12 @@ def load_manifest_records(manifest_path: Path) -> list[dict]:
     return json.loads(manifest_path.read_text())
 
 
-def extract_training_data(manifest_path: Path) -> tuple[np.ndarray, np.ndarray]:
+def extract_training_data(manifest_path: Path, max_samples: int | None = None) -> tuple[np.ndarray, np.ndarray]:
     records = load_manifest_records(manifest_path)
     X, y = [], []
     for rec in records:
+        if max_samples is not None and len(y) >= max_samples:
+            break
         if rec.get("icdr_grade") is None:
             continue
         img_path = Path(rec["image_path"])
@@ -71,11 +73,12 @@ def train_synthetic_fallback() -> None:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, help="Path to dataset manifest.json")
+    parser.add_argument("--max-samples", type=int, default=None, help="Limit training records")
     parser.add_argument("--output", type=Path, default=Path("ml/weights/icdr_classifier.joblib"))
     args = parser.parse_args()
 
     if args.manifest and args.manifest.exists():
-        X, y = extract_training_data(args.manifest)
+        X, y = extract_training_data(args.manifest, args.max_samples)
         print(f"Training on {len(y)} real samples from {args.manifest}")
     else:
         X, y = train_synthetic_fallback()

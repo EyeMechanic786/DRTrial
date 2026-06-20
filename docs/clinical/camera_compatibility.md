@@ -1,6 +1,6 @@
 # Camera compatibility — vendor-neutral DR analysis
 
-DRTrial is **vendor-neutral**: it does not require a specific fundus camera. Images from any manufacturer can be uploaded as JPEG or PNG colour fundus photographs.
+DRTrial is **vendor-neutral**: it does not require a specific fundus camera. Images from any manufacturer can be uploaded as colour fundus photographs in **JPEG, PNG, TIFF, WebP, or BMP**.
 
 ## Supported camera types
 
@@ -27,7 +27,7 @@ DRTrial does **not** replicate Optos's proprietary CE-marked AI product. It prov
 
 | Requirement | Status |
 |-------------|--------|
-| Accept Optos JPEG/PNG export | Yes |
+| Accept Optos JPEG/PNG/TIFF export | Yes |
 | Remove black letterbox / ROI crop | Yes |
 | Wide aspect ratio QC (no false reject) | Yes |
 | Peripheral lesion detection | Yes (with UWF caveat in report) |
