@@ -16,7 +16,7 @@ Last updated: 2026-06-20
 | UWF IQA manifest | `data/processed/uwf_iqa/manifest.json` | **700 records ingested** |
 | Combined manifest | `data/processed/combined/manifest.json` | Ready |
 | Optos reference stats | `data/processed/optos_reference/stats.json` | **Done** — 77 images, 33 non-DR, ~30% false-DR pre-calibration |
-| Benchmark report | `docs/validation/optos_benchmark_report.json` | **In progress** (10 grading + 3/cohort) |
+| Benchmark report | `docs/validation/optos_benchmark_report.json` | **Done** (10 grading + 3/cohort, 2026-06-20) |
 
 ## Image formats accepted (after rebuild)
 

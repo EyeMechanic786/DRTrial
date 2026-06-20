@@ -1,0 +1,95 @@
+{
+  "manifest": "/app/data/processed/uwf_iqa/manifest.json",
+  "segmentation": {
+    "microaneurysms": {
+      "mean_dice": null,
+      "n": 0
+    },
+    "hemorrhages": {
+      "mean_dice": null,
+      "n": 0
+    },
+    "hard_exudates": {
+      "mean_dice": null,
+      "n": 0
+    },
+    "soft_exudates": {
+      "mean_dice": null,
+      "n": 0
+    }
+  },
+  "grading": {
+    "kappa": 0.0,
+    "n": 10,
+    "latency_mean_ms": 47175.2,
+    "latency_p95_ms": 74260.4
+  },
+  "uwf_cohorts": {
+    "cohorts": {
+      "AMD": {
+        "n_analyzed": 3,
+        "mean_icdr_grade": 0.0,
+        "pct_icdr_gt0": 0.0,
+        "pct_atrophy_flagged": 0.0,
+        "expected_no_dr_cohort": true
+      },
+      "DR": {
+        "n_analyzed": 3,
+        "mean_icdr_grade": 0.0,
+        "pct_icdr_gt0": 0.0,
+        "pct_atrophy_flagged": 0.0,
+        "expected_no_dr_cohort": false
+      },
+      "Healthy": {
+        "n_analyzed": 3,
+        "mean_icdr_grade": 0.0,
+        "pct_icdr_gt0": 0.0,
+        "pct_atrophy_flagged": 0.0,
+        "expected_no_dr_cohort": true
+      },
+      "PM": {
+        "n_analyzed": 3,
+        "mean_icdr_grade": 0.0,
+        "pct_icdr_gt0": 0.0,
+        "pct_atrophy_flagged": 0.0,
+        "expected_no_dr_cohort": false
+      },
+      "RD": {
+        "n_analyzed": 3,
+        "mean_icdr_grade": 0.0,
+        "pct_icdr_gt0": 0.0,
+        "pct_atrophy_flagged": 0.0,
+        "expected_no_dr_cohort": false
+      },
+      "RVO": {
+        "n_analyzed": 3,
+        "mean_icdr_grade": 0.0,
+        "pct_icdr_gt0": 0.0,
+        "pct_atrophy_flagged": 0.0,
+        "expected_no_dr_cohort": false
+      },
+      "Uveitis": {
+        "n_analyzed": 3,
+        "mean_icdr_grade": 0.0,
+        "pct_icdr_gt0": 0.0,
+        "pct_atrophy_flagged": 0.0,
+        "expected_no_dr_cohort": false
+      },
+      "healthy": {
+        "n_analyzed": 3,
+        "mean_icdr_grade": 0.0,
+        "pct_icdr_gt0": 0.0,
+        "pct_atrophy_flagged": 0.0,
+        "expected_no_dr_cohort": true
+      },
+      "uveitis": {
+        "n_analyzed": 3,
+        "mean_icdr_grade": 0.0,
+        "pct_icdr_gt0": 0.0,
+        "pct_atrophy_flagged": 0.0,
+        "expected_no_dr_cohort": false
+      }
+    },
+    "non_dr_cohorts_mean_false_dr_pct": 0.0
+  }
+}
