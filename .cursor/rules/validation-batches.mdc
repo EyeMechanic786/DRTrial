@@ -1,0 +1,32 @@
+---
+description: UWF IQA batched benchmark validation (10 images per run)
+globs: ml/evaluation/**,docs/validation/**
+alwaysApply: false
+---
+
+# Batched validation
+
+Progress tracker: `docs/validation/batch_index.json` — update after each batch.
+
+## Run one batch (~7–10 min)
+
+```powershell
+docker compose exec worker python -m ml.evaluation.benchmark `
+  --manifest /app/data/processed/uwf_iqa/manifest.json `
+  --output /app/docs/validation/optos_benchmark_batchNN.json `
+  --max-seg 0 --max-grading 10 --grading-offset OFFSET
+```
+
+- `OFFSET = (batch_number - 1) * 10`
+- Grading only (no `--uwf-cohorts`) keeps each batch at exactly 10 images
+- Reports persist via `./docs:/app/docs` mount
+
+## After each batch
+
+1. Commit `docs/validation/optos_benchmark_batchNN.json` if user asked to commit
+2. Bump `batch_index.json`: `completed`, `next_batch`, `next_offset`
+
+## Do not
+
+- Re-run full `finalize-optos.ps1` for a single batch
+- Paste TIFF warning spam into chat — summarize from batch JSON only

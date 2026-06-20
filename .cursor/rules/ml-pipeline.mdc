@@ -1,0 +1,29 @@
+---
+description: DRTrial ML pipeline and Optos UWF conventions
+globs: ml/**/*.py
+alwaysApply: false
+---
+
+# ML pipeline
+
+- Entry point: `ml/dr_pathway/pipeline.py` → `analyze_fundus_image()`
+- Upload decode: `ml/dr_pathway/image_io.py` (JPEG, PNG, TIFF, WebP, BMP)
+- Optos UWF: `preprocess_fundus(..., camera_hint="optos_uwf")` before lesion detection
+- Macular atrophy: `ml/dr_pathway/macular_atrophy.py` + grading in `grading.py`
+- Default: classical CV (`USE_DL_MODELS=false` in docker-compose)
+
+## Optos reference
+
+- Stats: `data/processed/optos_reference/stats.json`
+- Build: `data/pipelines/build_optos_reference.py` — use `diagnosis_folder` (AMD, Healthy, PM), not ICDR slug names
+
+## Training
+
+- `ml/training/train_icdr.py` stratifies by grade when `--max-samples` is set
+- Fall back to synthetic bootstrap if fewer than 2 classes
+
+## Tests
+
+```bash
+pytest ml/tests/test_image_io.py ml/tests/test_macular_atrophy.py ml/tests/test_vendor_neutral.py ml/tests/test_optos_pipelines.py
+```

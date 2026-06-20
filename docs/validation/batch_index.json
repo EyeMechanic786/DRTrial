@@ -1,0 +1,20 @@
+{
+  "strategy": "uwf_iqa_grading_only",
+  "batch_size": 10,
+  "manifest": "data/processed/uwf_iqa/manifest.json",
+  "completed_batches": [1, 2, 3],
+  "images_graded": 30,
+  "next_batch": 4,
+  "next_offset": 30,
+  "next_output": "docs/validation/optos_benchmark_batch04.json",
+  "reports": {
+    "1": "docs/validation/optos_benchmark_batch01.json",
+    "2": "docs/validation/optos_benchmark_batch02.json",
+    "3": "docs/validation/optos_benchmark_batch03.json"
+  },
+  "notes": [
+    "UWF4DR/CodaLab skipped — UWF IQA is the primary validation set.",
+    "Each batch ~7-10 min on docker worker.",
+    "Update this file after each completed batch."
+  ]
+}

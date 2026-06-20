@@ -1,0 +1,30 @@
+---
+description: DRTrial workspace, Docker, datasets, and clinical constraints
+alwaysApply: true
+---
+
+# DRTrial core
+
+- Workspace root must be `DRTrial` (`C:\Users\docra\Projects\DRTrial`), not other repos.
+- Read `AGENTS.md` and `data/DATASETS_STATUS.md` before multi-step work.
+- Validation uses **UWF IQA only** unless the user explicitly revisits UWF4DR/CodaLab.
+
+## Docker
+
+- Rebuild after ML/API changes: `docker compose up -d --build api worker`
+- Code is in the image; only `data/`, `ml/weights/`, and `docs/` are bind-mounted.
+- Long benchmarks: `docker compose exec worker python -m ml.evaluation.benchmark ...`
+
+## Git / data
+
+- Do not commit `data/raw/` or `data/processed/`.
+- Do not read or summarize multi-GB raw image folders.
+
+## Clinical (non-negotiable)
+
+- Macula remains in exudate/DME analysis — no macula exclusion masks.
+- Macular atrophy downgrades false DR via `apply_atrophy_grading_context()`; DME logic unchanged.
+
+## Commits
+
+- Only commit when the user explicitly asks.
