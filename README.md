@@ -6,6 +6,8 @@
 
 **Repository:** https://github.com/EyeMechanic786/DRTrial
 
+**AI / agent handoff:** [AGENTS.md](AGENTS.md) · [Dataset status](data/DATASETS_STATUS.md) · [Validation batches](docs/validation/batch_index.json)
+
 ## Architecture
 
 ```
